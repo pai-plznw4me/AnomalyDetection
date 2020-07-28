@@ -21,18 +21,38 @@ def parsing(fpath):
     # txt file parsing
     data = []
     buy_hists = []
+    len_7 = []
+    len_5 = []
 
     len_elements = []
     for line in f.readlines()[:]:
         """
-        format 은 아래와 같이 되어 있음
-        hh:mm:ss \t [?] \t [type] \t - or WARN \t {json obj} \n
+        Log format 은 아래와 같은 종류로 되어 있음
+        1. hh:mm:ss \t [ip] \t [type] \t - or WARN \t {json obj} \n
+        2. hh:mm:ss \t [ip] \t ip \t [type] \t - or WARN \t {json obj} \n
+        
         WARN 이면 b2cBuyHistVOList 가 없다.   
         """
+
         len_elements.append(len(line.split('\t')))
+
         try:
 
-            cls, state, obj = line.split('\t')[2:]
+            if len(line.split('\t')[:]) == 5:
+                time, log_id, cls, state, obj = line.split('\t')[:]
+                len_5.append(line.split('\t')[:])
+
+            elif len(line.split('\t')[:]) == 7:
+                time, log_id, ip, cls, state, _,  obj = line.split('\t')[:]
+                len_7.append(line.split('\t')[:])
+
+            elif len(line.split('\t')[:]) == 1:
+                continue
+
+            else:
+                n_type = set((len_elements))
+                print(n_type, line)
+
             obj = eval(obj)
             obj['type'] = cls
 
@@ -57,7 +77,8 @@ def parsing(fpath):
         except KeyError as ke:
             pass;
 
-
+    list(map(print, len_5[:10]))
+    list(map(print, len_7[:10]))
 
     # Dict 2 DataFrame
     df = pd.DataFrame.from_dict(data)
@@ -74,6 +95,7 @@ def parsing(fpath):
     print('total # Log : {}'.format(n_log))
     print(len(set(len_elements)))
     print(set(len_elements))
+
 
 if __name__ == '__main__':
     # open sample
